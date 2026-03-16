@@ -152,7 +152,7 @@ export default function CarryOverMap({ evidenceState, qualFilter, onQualFilter }
               </button>
 
               {isExpanded && (
-                <div className="border-t border-surface-border px-4 pb-4 pt-3 animate-fade-in">
+                <div className="border-t border-surface-border p-4 animate-fade-in">
                   <p className="text-sm font-bold text-white mb-2">Mapped Evidence:</p>
                   {unit.mappedEvidence.length === 0 ? (
                     <p className="text-sm text-muted italic">No evidence items mapped</p>

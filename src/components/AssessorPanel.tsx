@@ -159,10 +159,10 @@ export default function AssessorPanel({
               </button>
 
               {isExpanded && (
-                <div className="border-t border-surface-border px-4 pb-4 pt-3 space-y-4 animate-fade-in">
+                <div className="border-t border-surface-border p-4 space-y-4 animate-fade-in">
                   {/* Evidence items */}
                   <div>
-                    <p className="text-sm font-bold text-white mb-2">Evidence Items ({unit.mappedEvidence.length} mapped):</p>
+                    <p className="text-sm font-bold text-white mb-3">Evidence Items ({unit.mappedEvidence.length} mapped):</p>
                     <div className="space-y-2">
                       {unit.mappedEvidence.map((me) => {
                         const ev = EVIDENCE_ITEMS.find((e) => e.id === me.evidenceId);
@@ -171,7 +171,7 @@ export default function AssessorPanel({
                         const verdict = state?.assessorVerdict;
 
                         return (
-                          <div key={me.evidenceId} className="flex items-center gap-3 py-2 px-3 bg-surface-light border border-surface-border">
+                          <div key={me.evidenceId} className="flex items-center gap-3 p-3 bg-surface-light border border-surface-border">
                             {me.isUploaded && !me.isRejected ? (
                               <CheckCircle2 size={14} className="text-accent shrink-0" />
                             ) : me.isRejected ? (
@@ -214,7 +214,7 @@ export default function AssessorPanel({
 
                   {/* Gap info */}
                   {unit.needed > 0 && (
-                    <div className="bg-red-500/5 border border-red-500/20 p-3">
+                    <div className="bg-red-500/5 border border-red-500/20 p-4">
                       <p className="text-sm text-red-400 font-medium">
                         Gap: {unit.needed} more evidence item{unit.needed > 1 ? "s" : ""} needed for this unit
                       </p>
@@ -223,8 +223,8 @@ export default function AssessorPanel({
 
                   {/* Competency decision */}
                   <div>
-                    <p className="text-sm font-bold text-white mb-2">Competency Decision:</p>
-                    <div className="flex gap-2">
+                    <p className="text-sm font-bold text-white mb-3">Competency Decision:</p>
+                    <div className="flex gap-3">
                       {COMPETENCY_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}

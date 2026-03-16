@@ -412,9 +412,9 @@ function StudentDetail({ student, onRefresh }: { student: Student; onRefresh: ()
         {student.payments.length === 0 ? (
           <p className="text-sm text-muted italic">No payments recorded yet.</p>
         ) : (
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {student.payments.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 bg-surface-light border border-surface-border px-3 py-2">
+              <div key={p.id} className="flex items-center gap-3 bg-surface-light border border-surface-border p-3">
                 <DollarSign size={14} className="text-accent shrink-0" />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-semibold text-accent">{formatCurrency(p.amount)}</span>
@@ -434,7 +434,7 @@ function StudentDetail({ student, onRefresh }: { student: Student; onRefresh: ()
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-2 border-t border-surface-border">
+      <div className="flex items-center justify-between pt-3 border-t border-surface-border">
         <ExportPaymentStatement
           studentName={student.name}
           qualification={student.qualification}

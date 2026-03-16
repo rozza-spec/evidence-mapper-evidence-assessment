@@ -180,7 +180,7 @@ export default function StudentPortal() {
           </div>
 
           {/* Progress */}
-          <div className="bg-surface border border-surface-border p-5">
+          <div className="bg-surface border border-surface-border p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-base font-medium text-white">Overall Progress</span>
               <span className="font-display text-3xl font-bold text-accent">{stats.coveragePercent}%</span>
@@ -198,7 +198,7 @@ export default function StudentPortal() {
           </div>
 
           {/* Financial summary */}
-          <div className="bg-surface border border-surface-border p-5">
+          <div className="bg-surface border border-surface-border p-4">
             <h3 className="font-display text-lg font-bold text-white mb-3">Financial Summary</h3>
             <div className="grid grid-cols-3 gap-3">
               <div className="text-center">
@@ -408,7 +408,7 @@ export default function StudentPortal() {
             ) : (
               <div className="space-y-2">
                 {student.payments.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between py-2 border-b border-surface-border last:border-0">
+                  <div key={p.id} className="flex items-center justify-between py-2.5 border-b border-surface-border last:border-0">
                     <div>
                       <span className="text-sm text-white font-medium">${p.amount.toLocaleString()}</span>
                       {p.note && <span className="text-xs text-muted ml-2">{p.note}</span>}

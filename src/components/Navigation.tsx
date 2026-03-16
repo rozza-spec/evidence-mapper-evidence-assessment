@@ -93,7 +93,7 @@ export default function Navigation({ currentView, onNavigate, stats }: Props) {
           </div>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1.5">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -111,7 +111,7 @@ export default function Navigation({ currentView, onNavigate, stats }: Props) {
           </nav>
 
           {/* Right side */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             <BrisbaneClock />
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-24 h-1.5 bg-surface-light overflow-hidden">

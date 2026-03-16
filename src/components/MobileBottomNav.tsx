@@ -40,7 +40,7 @@ export default function MobileBottomNav({ currentView, onNavigate }: Props) {
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${
                 active ? "text-accent" : "text-muted"
               }`}
             >
