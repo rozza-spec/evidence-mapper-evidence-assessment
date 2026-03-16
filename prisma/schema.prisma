@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Student {
+  id            String    @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  qualification String
+  totalOwing    Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  payments      Payment[]
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  amount          Float
+  invoiceFilename String?
+  invoicePath     String?
+  note            String?
+  createdAt       DateTime @default(now())
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId       String
+}

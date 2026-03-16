@@ -1,0 +1,8 @@
+node_modules
+.next
+.env
+*.db
+*.tsbuildinfo
+/src/generated/prisma
+/public/uploads/invoices/*
+!/public/uploads/invoices/.gitkeep
