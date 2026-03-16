@@ -37,6 +37,7 @@ const ALL_NAV_ITEMS: {
   { id: "assessor-panel", label: "Assessor Panel", icon: <Shield size={18} />, roles: ["ADMIN", "TRAINER"] },
   { id: "gap-analysis", label: "Gap Analysis", icon: <AlertTriangle size={18} />, roles: ["ADMIN", "TRAINER"] },
   { id: "students", label: "Students", icon: <Users size={18} />, roles: ["ADMIN", "TRAINER"] },
+  { id: "my-portal", label: "My Portal", icon: <User size={18} />, roles: ["STUDENT"] },
 ];
 
 function BrisbaneClock() {

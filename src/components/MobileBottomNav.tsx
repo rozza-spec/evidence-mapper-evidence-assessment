@@ -8,6 +8,8 @@ import {
   Grid3X3,
   Shield,
   Users,
+  User,
+  DollarSign,
 } from "lucide-react";
 
 interface Props {
@@ -21,6 +23,7 @@ const MOBILE_NAV: { id: ViewMode; label: string; icon: React.ReactNode; roles: s
   { id: "coverage-map", label: "Map", icon: <Grid3X3 size={20} />, roles: ["ADMIN", "TRAINER"] },
   { id: "assessor-panel", label: "Assessor", icon: <Shield size={20} />, roles: ["ADMIN", "TRAINER"] },
   { id: "students", label: "Students", icon: <Users size={20} />, roles: ["ADMIN", "TRAINER"] },
+  { id: "my-portal", label: "My Portal", icon: <User size={20} />, roles: ["STUDENT"] },
 ];
 
 export default function MobileBottomNav({ currentView, onNavigate }: Props) {

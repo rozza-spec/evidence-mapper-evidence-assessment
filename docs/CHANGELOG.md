@@ -125,3 +125,39 @@ Full session-by-session history of all changes made to the Prepare Training app.
 #### Next.js Hardening (A02 — Security Misconfiguration)
 - poweredByHeader: false — removes Next.js version fingerprint
 - reactStrictMode: true — catches unsafe component patterns in dev
+
+---
+
+## Session 4 — 17 Mar 2026
+
+### Student Portal
+- Built full student-facing portal (`/my-portal` view) with 4 tabs: Overview, Evidence, Units, Payments
+- Students auto-redirect to their portal on login (role-based default view)
+- Self-service evidence upload: students can upload PDF evidence directly
+- Real-time status badges: Verified, Rejected, Pending Review
+- Financial overview: total fees, amount paid, balance remaining with progress bars
+- Unit competency display: shows assessor decisions per unit with progress indicators
+- Payment history: chronological list of all payments
+- Created `/api/me` endpoint for authenticated user + linked student data
+- Student accounts auto-created when trainer provides an email during enrolment
+
+### Multi-Qualification Enrolment
+- Added `StudentEnrolment` junction table to Prisma schema
+- Created `/api/students/[id]/enrolments` API (GET, POST, DELETE)
+- Enrolment management UI in Student Management: add/remove qualifications per student
+- Primary qualification badge and protection against removing it
+- Enrolment records created automatically during student creation
+
+### Deployment Preparation
+- Made database provider switchable: SQLite (dev) via better-sqlite3, Postgres (prod) via @prisma/adapter-pg
+- `db.ts` auto-detects provider from `DATABASE_URL` prefix
+- Created `vercel.json` with build command for Prisma generation
+- Created `.env.example` documenting all required environment variables
+
+### Automated Testing
+- Installed Vitest as test runner
+- 36 tests across 3 test files:
+  - `validation.test.ts` — Zod schema validation (student, payment, evidence, competency, update)
+  - `file-validation.test.ts` — filename sanitization and path traversal protection
+  - `data-integrity.test.ts` — qualification data, unit mappings, engine computations
+- Added `test` and `test:watch` scripts to package.json

@@ -10,7 +10,10 @@ export async function GET(
   const { id } = await params;
   const student = await prisma.student.findUnique({
     where: { id },
-    include: { payments: { orderBy: { createdAt: "desc" } } },
+    include: {
+      payments: { orderBy: { createdAt: "desc" } },
+      enrolments: { orderBy: { enrolledAt: "desc" } },
+    },
   });
 
   if (!student) {
@@ -26,6 +29,12 @@ export async function GET(
     qualification: student.qualification,
     totalOwing: student.totalOwing,
     createdAt: student.createdAt,
+    enrolments: student.enrolments.map((e) => ({
+      id: e.id,
+      qualificationId: e.qualificationId,
+      status: e.status,
+      enrolledAt: e.enrolledAt,
+    })),
     payments: student.payments.map((p) => ({
       id: p.id,
       amount: p.amount,

@@ -19,19 +19,31 @@ model User {
 }
 
 model Student {
-  id                String             @id @default(cuid())
+  id                String                @id @default(cuid())
   name              String
   email             String?
   phone             String?
   qualification     String
-  totalOwing        Float              @default(0)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  totalOwing        Float                 @default(0)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
   payments          Payment[]
   evidenceRecords   EvidenceRecord[]
   competencyRecords CompetencyRecord[]
-  userId            String?            @unique
-  user              User?              @relation("UserStudent", fields: [userId], references: [id])
+  userId            String?               @unique
+  user              User?                 @relation("UserStudent", fields: [userId], references: [id])
+  enrolments        StudentEnrolment[]
+}
+
+model StudentEnrolment {
+  id              String   @id @default(cuid())
+  qualificationId String
+  enrolledAt      DateTime @default(now())
+  status          String   @default("active")
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId       String
+
+  @@unique([studentId, qualificationId])
 }
 
 model EvidenceRecord {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useReducer, useCallback, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
   EvidenceState,
@@ -24,6 +25,7 @@ import AssessorPanel from "@/components/AssessorPanel";
 import GapAnalysis from "@/components/GapAnalysis";
 import StudentManagement from "@/components/StudentManagement";
 import StudentSelector from "@/components/StudentSelector";
+import StudentPortal from "@/components/StudentPortal";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
 type EvidenceAction =
@@ -76,7 +78,16 @@ interface SelectedStudent {
 }
 
 export default function Home() {
+  const { data: session } = useSession();
+  const isStudent = session?.user?.role === "STUDENT";
   const [view, setView] = useState<ViewMode>("dashboard");
+
+  // Default students to their portal
+  useEffect(() => {
+    if (isStudent && view === "dashboard") {
+      setView("my-portal");
+    }
+  }, [isStudent, view]);
   const [qualFilter, setQualFilter] = useState<QualificationId | null>(null);
   const [evidenceState, dispatch] = useReducer(evidenceReducer, {});
   const [unitCompetency, setUnitCompetency] = useState<UnitCompetencyState>({});
@@ -195,7 +206,7 @@ export default function Home() {
   const stats = computeStats(evidenceState);
 
   const needsStudent =
-    view !== "dashboard" && view !== "students";
+    view !== "dashboard" && view !== "students" && view !== "my-portal";
 
   return (
     <div className="min-h-screen">
@@ -268,6 +279,7 @@ export default function Home() {
           />
         )}
         {view === "students" && <StudentManagement />}
+        {view === "my-portal" && <StudentPortal />}
       </main>
 
       <MobileBottomNav currentView={view} onNavigate={setView} />

@@ -2,8 +2,11 @@ node_modules
 .next
 .env
 *.db
-*.tsbuildinfo
+*.db-journal
+
 /src/generated/prisma
+*.tsbuildinfo
+
 /public/uploads/invoices/*
 !/public/uploads/invoices/.gitkeep
 /public/uploads/evidence/*

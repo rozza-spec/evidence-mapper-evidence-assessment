@@ -72,4 +72,5 @@ export type ViewMode =
   | "student-checklist"
   | "assessor-panel"
   | "gap-analysis"
-  | "students";
+  | "students"
+  | "my-portal";

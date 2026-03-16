@@ -17,6 +17,7 @@ import {
   Trash2,
   X,
   Search,
+  GraduationCap,
 } from "lucide-react";
 import { ExportPaymentStatement } from "@/components/ExportButtons";
 
@@ -27,6 +28,13 @@ interface Payment {
   invoicePath: string | null;
   note: string | null;
   createdAt: string;
+}
+
+interface Enrolment {
+  id: string;
+  qualificationId: string;
+  status: string;
+  enrolledAt: string;
 }
 
 interface Student {
@@ -40,6 +48,7 @@ interface Student {
   balance: number;
   createdAt: string;
   payments: Payment[];
+  enrolments?: Enrolment[];
 }
 
 const QUAL_OPTIONS = QUALIFICATIONS.map((q) => ({
@@ -374,6 +383,9 @@ function StudentDetail({ student, onRefresh }: { student: Student; onRefresh: ()
         </div>
       )}
 
+      {/* Enrolments */}
+      <EnrolmentSection student={student} onRefresh={onRefresh} />
+
       {/* Payment history */}
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -515,6 +527,123 @@ function AddPaymentForm({ studentId, onCreated }: { studentId: string; onCreated
         {submitting ? "Recording..." : "Record Payment"}
       </button>
     </form>
+  );
+}
+
+function EnrolmentSection({ student, onRefresh }: { student: Student; onRefresh: () => void }) {
+  const [adding, setAdding] = useState(false);
+  const [newQual, setNewQual] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const enrolments = student.enrolments ?? [];
+  const enrolledIds = new Set(enrolments.map((e) => e.qualificationId));
+  // Always include the primary qualification
+  enrolledIds.add(student.qualification);
+  const availableQuals = QUAL_OPTIONS.filter((q) => !enrolledIds.has(q.value));
+
+  async function handleAdd() {
+    if (!newQual) return;
+    setSubmitting(true);
+    const res = await fetch(`/api/students/${student.id}/enrolments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ qualificationId: newQual }),
+    });
+    if (res.ok) {
+      toast.success("Qualification added");
+      setAdding(false);
+      setNewQual("");
+      onRefresh();
+    } else {
+      const data = await res.json();
+      toast.error(data.error || "Failed to add qualification");
+    }
+    setSubmitting(false);
+  }
+
+  async function handleRemove(enrolmentId: string, qualId: string) {
+    const res = await fetch(`/api/students/${student.id}/enrolments?enrolmentId=${enrolmentId}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      toast.success(`Removed ${qualId}`);
+      onRefresh();
+    } else {
+      toast.error("Failed to remove qualification");
+    }
+  }
+
+  const allEnrolled = [
+    { id: "primary", qualificationId: student.qualification, status: "active", isPrimary: true },
+    ...enrolments.filter((e) => e.qualificationId !== student.qualification).map((e) => ({ ...e, isPrimary: false })),
+  ];
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <h5 className="text-sm font-bold text-white flex items-center gap-2">
+          <GraduationCap size={14} className="text-accent" />
+          Qualifications ({allEnrolled.length})
+        </h5>
+        {availableQuals.length > 0 && (
+          <button
+            onClick={() => setAdding(!adding)}
+            className="flex items-center gap-1 text-sm text-accent hover:text-accent/80 transition-colors"
+          >
+            {adding ? <X size={14} /> : <Plus size={14} />}
+            {adding ? "Cancel" : "Add Qualification"}
+          </button>
+        )}
+      </div>
+
+      {adding && (
+        <div className="flex items-center gap-2 mb-2 animate-fade-in">
+          <select
+            value={newQual}
+            onChange={(e) => setNewQual(e.target.value)}
+            className="flex-1 bg-surface-light border border-surface-border text-sm text-white px-3 py-2 focus:outline-none focus:border-accent"
+          >
+            <option value="">Select qualification...</option>
+            {availableQuals.map((q) => (
+              <option key={q.value} value={q.value}>{q.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleAdd}
+            disabled={!newQual || submitting}
+            className="bg-accent text-primary px-3 py-2 font-semibold text-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
+          >
+            {submitting ? "Adding..." : "Add"}
+          </button>
+        </div>
+      )}
+
+      <div className="space-y-1">
+        {allEnrolled.map((e) => {
+          const qual = QUALIFICATIONS.find((q) => q.code === e.qualificationId);
+          return (
+            <div key={e.id} className="flex items-center justify-between bg-surface-light border border-surface-border px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-accent">{e.qualificationId}</span>
+                <span className="text-sm text-white">{qual?.level ?? ""}</span>
+                {e.isPrimary && (
+                  <span className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent font-semibold">PRIMARY</span>
+                )}
+              </div>
+              {!e.isPrimary && (
+                <button
+                  onClick={() => handleRemove(e.id, e.qualificationId)}
+                  className="text-muted hover:text-red-400 transition-colors"
+                  title="Remove qualification"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
