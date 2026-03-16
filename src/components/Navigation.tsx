@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { ViewMode } from "@/lib/types";
 import {
   LayoutDashboard,
@@ -13,6 +14,8 @@ import {
   Clock,
   Menu,
   X,
+  LogOut,
+  User,
 } from "lucide-react";
 
 interface Props {
@@ -21,14 +24,19 @@ interface Props {
   stats: { coveragePercent: number };
 }
 
-const NAV_ITEMS: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
-  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
-  { id: "evidence-list", label: "Evidence List", icon: <FileText size={18} /> },
-  { id: "coverage-map", label: "Coverage Map", icon: <Grid3X3 size={18} /> },
-  { id: "student-checklist", label: "Student Checklist", icon: <ClipboardCheck size={18} /> },
-  { id: "assessor-panel", label: "Assessor Panel", icon: <Shield size={18} /> },
-  { id: "gap-analysis", label: "Gap Analysis", icon: <AlertTriangle size={18} /> },
-  { id: "students", label: "Students", icon: <Users size={18} /> },
+const ALL_NAV_ITEMS: {
+  id: ViewMode;
+  label: string;
+  icon: React.ReactNode;
+  roles: string[];
+}[] = [
+  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} />, roles: ["ADMIN", "TRAINER"] },
+  { id: "evidence-list", label: "Evidence List", icon: <FileText size={18} />, roles: ["ADMIN", "TRAINER", "STUDENT"] },
+  { id: "coverage-map", label: "Coverage Map", icon: <Grid3X3 size={18} />, roles: ["ADMIN", "TRAINER"] },
+  { id: "student-checklist", label: "Student Checklist", icon: <ClipboardCheck size={18} />, roles: ["ADMIN", "TRAINER", "STUDENT"] },
+  { id: "assessor-panel", label: "Assessor Panel", icon: <Shield size={18} />, roles: ["ADMIN", "TRAINER"] },
+  { id: "gap-analysis", label: "Gap Analysis", icon: <AlertTriangle size={18} />, roles: ["ADMIN", "TRAINER"] },
+  { id: "students", label: "Students", icon: <Users size={18} />, roles: ["ADMIN", "TRAINER"] },
 ];
 
 function BrisbaneClock() {
@@ -60,7 +68,11 @@ function BrisbaneClock() {
 }
 
 export default function Navigation({ currentView, onNavigate, stats }: Props) {
+  const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const userRole = session?.user?.role ?? "TRAINER";
+  const navItems = ALL_NAV_ITEMS.filter((item) => item.roles.includes(userRole));
 
   return (
     <header className="sticky top-0 z-50 bg-primary/95 backdrop-blur border-b border-surface-border">
@@ -81,7 +93,7 @@ export default function Navigation({ currentView, onNavigate, stats }: Props) {
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-1">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
@@ -110,6 +122,24 @@ export default function Navigation({ currentView, onNavigate, stats }: Props) {
               <span className="text-xs font-mono text-accent">{stats.coveragePercent}%</span>
             </div>
 
+            {/* User info + logout */}
+            {session?.user && (
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="flex items-center gap-1.5 text-xs text-muted">
+                  <User size={12} />
+                  <span className="font-medium text-white">{session.user.name}</span>
+                  <span className="text-accent/60 uppercase text-[10px]">{session.user.role}</span>
+                </div>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  className="p-1.5 text-muted hover:text-red-400 transition-colors"
+                  title="Sign out"
+                >
+                  <LogOut size={14} />
+                </button>
+              </div>
+            )}
+
             {/* Mobile menu button */}
             <button
               className="lg:hidden text-muted hover:text-white"
@@ -124,7 +154,7 @@ export default function Navigation({ currentView, onNavigate, stats }: Props) {
         {/* Mobile nav */}
         {mobileOpen && (
           <nav className="lg:hidden pb-3 animate-fade-in">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => {
@@ -141,6 +171,15 @@ export default function Navigation({ currentView, onNavigate, stats }: Props) {
                 {item.label}
               </button>
             ))}
+            {session?.user && (
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
+              >
+                <LogOut size={18} />
+                Sign Out ({session.user.name})
+              </button>
+            )}
           </nav>
         )}
       </div>

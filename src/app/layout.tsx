@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, Inter, JetBrains_Mono, Dancing_Script } from "next/font/google";
+import SessionProvider from "@/components/SessionProvider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const barlow = Barlow_Condensed({
@@ -39,7 +41,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${barlow.variable} ${inter.variable} ${jetbrains.variable} ${dancingScript.variable}`}>
       <body className="font-body antialiased min-h-screen blueprint-bg">
-        {children}
+        <SessionProvider>{children}</SessionProvider>
+        <Toaster
+          theme="dark"
+          position="bottom-right"
+          toastOptions={{
+            style: { background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#fff" },
+          }}
+        />
       </body>
     </html>
   );

@@ -4,11 +4,11 @@ import { useMemo } from "react";
 import { EvidenceState } from "@/lib/types";
 import { EVIDENCE_ITEMS, UNITS } from "@/lib/data";
 import { computeStats, getUploadImpact, getPriorityChecklist } from "@/lib/engine";
-import { CheckCircle2, Circle, ArrowRight, Zap, Target } from "lucide-react";
+import { CheckCircle2, Circle, ArrowRight, Zap, Target, Upload } from "lucide-react";
 
 interface Props {
   evidenceState: EvidenceState;
-  onUpload: (id: string) => void;
+  onUpload: (id: string, file?: File) => void;
   onRemove: (id: string) => void;
 }
 
@@ -129,8 +129,20 @@ export default function StudentChecklist({ evidenceState, onUpload, onRemove }: 
                   <span className="font-mono text-xs text-muted w-6 text-right shrink-0 mt-0.5">
                     {idx + 1}.
                   </span>
-                  <button onClick={() => onUpload(ev.id)} aria-label="Mark as uploaded">
-                    <Circle size={18} className="text-muted hover:text-accent transition-colors mt-0.5" />
+                  <button
+                    onClick={() => {
+                      const input = document.createElement("input");
+                      input.type = "file";
+                      input.accept = ".pdf";
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        onUpload(ev.id, file ?? undefined);
+                      };
+                      input.click();
+                    }}
+                    aria-label="Upload evidence file"
+                  >
+                    <Upload size={18} className="text-muted hover:text-accent transition-colors mt-0.5" />
                   </button>
                   <div className={`w-1 self-stretch ${cls.dot} shrink-0`} />
                   <div className="flex-1 min-w-0">

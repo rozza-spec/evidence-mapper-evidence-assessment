@@ -37,6 +37,8 @@ export interface EvidenceState {
   [evidenceId: string]: {
     status: EvidenceStatus;
     assessorVerdict: AssessorVerdict;
+    filePath?: string | null;
+    fileName?: string | null;
   };
 }
 

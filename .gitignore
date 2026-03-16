@@ -6,3 +6,4 @@ node_modules
 /src/generated/prisma
 /public/uploads/invoices/*
 !/public/uploads/invoices/.gitkeep
+/public/uploads/evidence/*

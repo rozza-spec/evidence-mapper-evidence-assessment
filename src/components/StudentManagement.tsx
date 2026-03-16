@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import CsvImport from "@/components/CsvImport";
 import { QUALIFICATIONS } from "@/lib/data";
 import {
   Users,
@@ -10,10 +13,12 @@ import {
   DollarSign,
   Upload,
   FileText,
+  FileSpreadsheet,
   Trash2,
   X,
   Search,
 } from "lucide-react";
+import { ExportPaymentStatement } from "@/components/ExportButtons";
 
 interface Payment {
   id: string;
@@ -58,6 +63,7 @@ export default function StudentManagement() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showCsvImport, setShowCsvImport] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -91,14 +97,27 @@ export default function StudentManagement() {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-accent text-primary px-4 py-2 font-semibold text-sm hover:bg-accent/90 transition-colors"
-        >
-          {showForm ? <X size={16} /> : <Plus size={16} />}
-          {showForm ? "Cancel" : "Add Student"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setShowCsvImport(!showCsvImport); setShowForm(false); }}
+            className="flex items-center gap-2 bg-surface-light text-muted border border-surface-border px-3 py-2 text-sm hover:text-white transition-colors"
+          >
+            <FileSpreadsheet size={16} />
+            <span className="hidden sm:inline">CSV Import</span>
+          </button>
+          <button
+            onClick={() => { setShowForm(!showForm); setShowCsvImport(false); }}
+            className="flex items-center gap-2 bg-accent text-primary px-4 py-2 font-semibold text-sm hover:bg-accent/90 transition-colors"
+          >
+            {showForm ? <X size={16} /> : <Plus size={16} />}
+            {showForm ? "Cancel" : "Add Student"}
+          </button>
+        </div>
       </div>
+
+      {showCsvImport && (
+        <CsvImport onComplete={() => { setShowCsvImport(false); fetchStudents(); }} />
+      )}
 
       {showForm && (
         <AddStudentForm
@@ -187,10 +206,13 @@ function AddStudentForm({ onCreated }: { onCreated: () => void }) {
     });
 
     if (res.ok) {
+      toast.success(`${name.trim()} enrolled successfully`);
       onCreated();
     } else {
       const data = await res.json();
-      setError(data.error || "Failed to create student");
+      const msg = data.error || "Failed to create student";
+      setError(msg);
+      toast.error(msg);
     }
     setSubmitting(false);
   }
@@ -294,11 +316,13 @@ function StudentCard({
 function StudentDetail({ student, onRefresh }: { student: Student; onRefresh: () => void }) {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function handleDelete() {
-    if (!confirm(`Delete ${student.name}? This removes all their payment records.`)) return;
+    setConfirmDelete(false);
     setDeleting(true);
     await fetch(`/api/students/${student.id}`, { method: "DELETE" });
+    toast.success(`${student.name} deleted`);
     onRefresh();
   }
 
@@ -398,9 +422,17 @@ function StudentDetail({ student, onRefresh }: { student: Student; onRefresh: ()
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end pt-2 border-t border-surface-border">
+      <div className="flex items-center justify-between pt-2 border-t border-surface-border">
+        <ExportPaymentStatement
+          studentName={student.name}
+          qualification={student.qualification}
+          totalOwing={student.totalOwing}
+          totalPaid={student.totalPaid}
+          balance={student.balance}
+          payments={student.payments}
+        />
         <button
-          onClick={handleDelete}
+          onClick={() => setConfirmDelete(true)}
           disabled={deleting}
           className="flex items-center gap-1 text-sm text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
         >
@@ -408,6 +440,16 @@ function StudentDetail({ student, onRefresh }: { student: Student; onRefresh: ()
           {deleting ? "Deleting..." : "Delete Student"}
         </button>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete Student"
+        message={`Permanently delete ${student.name}? This removes all their payment records, evidence, and competency data.`}
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }
@@ -433,10 +475,13 @@ function AddPaymentForm({ studentId, onCreated }: { studentId: string; onCreated
 
     const res = await fetch(`/api/students/${studentId}/payments`, { method: "POST", body: form });
     if (res.ok) {
+      toast.success(`Payment of $${num.toFixed(2)} recorded`);
       onCreated();
     } else {
       const data = await res.json();
-      setError(data.error || "Failed to record payment");
+      const msg = data.error || "Failed to record payment";
+      setError(msg);
+      toast.error(msg);
     }
     setSubmitting(false);
   }
@@ -461,7 +506,7 @@ function AddPaymentForm({ studentId, onCreated }: { studentId: string; onCreated
           <label className="flex items-center gap-2 cursor-pointer bg-surface-light border border-surface-border text-sm text-muted px-3 py-2 hover:border-accent transition-colors">
             <Upload size={14} />
             <span className="truncate">{file ? file.name : "Choose file..."}</span>
-            <input type="file" accept=".pdf,.png,.jpg,.jpeg" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <input type="file" accept=".pdf" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           </label>
         </div>
       </div>

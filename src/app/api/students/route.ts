@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { createStudentSchema } from "@/lib/validation";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const students = await prisma.student.findMany({
@@ -17,14 +19,16 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { name, email, phone, qualification, totalOwing } = body;
+  const parsed = createStudentSchema.safeParse(body);
 
-  if (!name || !qualification) {
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Name and qualification are required" },
+      { error: parsed.error.issues[0].message },
       { status: 400 }
     );
   }
+
+  const { name, email, phone, qualification, totalOwing } = parsed.data;
 
   const student = await prisma.student.create({
     data: {
@@ -32,9 +36,14 @@ export async function POST(request: Request) {
       email: email || null,
       phone: phone || null,
       qualification,
-      totalOwing: Number(totalOwing) || 0,
+      totalOwing,
     },
     include: { payments: true },
+  });
+
+  await logAction("student.created", {
+    targetId: student.id,
+    details: `Enrolled ${name} in ${qualification}`,
   });
 
   return NextResponse.json(

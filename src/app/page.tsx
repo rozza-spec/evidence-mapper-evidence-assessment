@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useReducer, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 import {
   EvidenceState,
   UnitCompetencyState,
@@ -22,8 +23,11 @@ import StudentChecklist from "@/components/StudentChecklist";
 import AssessorPanel from "@/components/AssessorPanel";
 import GapAnalysis from "@/components/GapAnalysis";
 import StudentManagement from "@/components/StudentManagement";
+import StudentSelector from "@/components/StudentSelector";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 type EvidenceAction =
+  | { type: "LOAD"; state: EvidenceState }
   | { type: "UPLOAD"; id: string }
   | { type: "REMOVE"; id: string }
   | { type: "SET_VERDICT"; id: string; verdict: AssessorVerdict }
@@ -34,6 +38,8 @@ function evidenceReducer(
   action: EvidenceAction
 ): EvidenceState {
   switch (action.type) {
+    case "LOAD":
+      return action.state;
     case "UPLOAD":
       return {
         ...state,
@@ -63,35 +69,133 @@ function evidenceReducer(
   }
 }
 
+interface SelectedStudent {
+  id: string;
+  name: string;
+  qualification: string;
+}
+
 export default function Home() {
   const [view, setView] = useState<ViewMode>("dashboard");
   const [qualFilter, setQualFilter] = useState<QualificationId | null>(null);
   const [evidenceState, dispatch] = useReducer(evidenceReducer, {});
   const [unitCompetency, setUnitCompetency] = useState<UnitCompetencyState>({});
+  const [selectedStudent, setSelectedStudent] = useState<SelectedStudent | null>(null);
+
+  useEffect(() => {
+    if (!selectedStudent) {
+      dispatch({ type: "RESET" });
+      setUnitCompetency({});
+      return;
+    }
+
+    async function loadStudentData() {
+      const [evRes, compRes] = await Promise.all([
+        fetch(`/api/students/${selectedStudent!.id}/evidence`),
+        fetch(`/api/students/${selectedStudent!.id}/competency`),
+      ]);
+
+      if (evRes.ok) {
+        const evState = await evRes.json();
+        dispatch({ type: "LOAD", state: evState });
+      }
+
+      if (compRes.ok) {
+        const compState = await compRes.json();
+        setUnitCompetency(compState);
+      }
+    }
+
+    loadStudentData();
+  }, [selectedStudent]);
 
   const handleUpload = useCallback(
-    (id: string) => dispatch({ type: "UPLOAD", id }),
-    []
+    async (id: string, file?: File) => {
+      dispatch({ type: "UPLOAD", id });
+      if (selectedStudent) {
+        if (file) {
+          const formData = new FormData();
+          formData.append("evidenceItemId", id);
+          formData.append("status", "uploaded");
+          formData.append("file", file);
+          const res = await fetch(`/api/students/${selectedStudent.id}/evidence`, {
+            method: "POST",
+            body: formData,
+          });
+          if (res.ok) {
+            toast.success(`Evidence uploaded: ${file.name}`);
+          } else {
+            const data = await res.json();
+            toast.error(data.error || "Upload failed");
+          }
+        } else {
+          await fetch(`/api/students/${selectedStudent.id}/evidence`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ evidenceItemId: id, status: "uploaded" }),
+          });
+          toast.success("Evidence marked as uploaded");
+        }
+      }
+    },
+    [selectedStudent]
   );
+
   const handleRemove = useCallback(
-    (id: string) => dispatch({ type: "REMOVE", id }),
-    []
+    async (id: string) => {
+      dispatch({ type: "REMOVE", id });
+      if (selectedStudent) {
+        await fetch(
+          `/api/students/${selectedStudent.id}/evidence?evidenceItemId=${id}`,
+          { method: "DELETE" }
+        );
+      }
+    },
+    [selectedStudent]
   );
+
   const handleVerdict = useCallback(
-    (id: string, verdict: AssessorVerdict) =>
-      dispatch({ type: "SET_VERDICT", id, verdict }),
-    []
+    async (id: string, verdict: AssessorVerdict) => {
+      dispatch({ type: "SET_VERDICT", id, verdict });
+      if (selectedStudent) {
+        await fetch(`/api/students/${selectedStudent.id}/evidence`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            evidenceItemId: id,
+            assessorVerdict: verdict,
+          }),
+        });
+      }
+    },
+    [selectedStudent]
   );
+
   const handleReset = useCallback(() => dispatch({ type: "RESET" }), []);
 
   const handleSetCompetency = useCallback(
-    (unitCode: string, status: UnitCompetencyState[string]) => {
+    async (unitCode: string, status: UnitCompetencyState[string]) => {
       setUnitCompetency((prev) => ({ ...prev, [unitCode]: status }));
+      if (selectedStudent && status) {
+        await fetch(`/api/students/${selectedStudent.id}/competency`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ unitCode, status }),
+        });
+      } else if (selectedStudent && !status) {
+        await fetch(
+          `/api/students/${selectedStudent.id}/competency?unitCode=${unitCode}`,
+          { method: "DELETE" }
+        );
+      }
     },
-    []
+    [selectedStudent]
   );
 
   const stats = computeStats(evidenceState);
+
+  const needsStudent =
+    view !== "dashboard" && view !== "students";
 
   return (
     <div className="min-h-screen">
@@ -102,6 +206,13 @@ export default function Home() {
       />
 
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        {needsStudent && (
+          <StudentSelector
+            selected={selectedStudent}
+            onSelect={setSelectedStudent}
+          />
+        )}
+
         {view === "dashboard" && (
           <Dashboard
             stats={stats}
@@ -144,6 +255,7 @@ export default function Home() {
             onQualFilter={setQualFilter}
             onVerdict={handleVerdict}
             onSetCompetency={handleSetCompetency}
+            selectedStudent={selectedStudent}
           />
         )}
         {view === "gap-analysis" && (
@@ -152,10 +264,15 @@ export default function Home() {
             qualFilter={qualFilter}
             onQualFilter={setQualFilter}
             onUpload={handleUpload}
+            selectedStudent={selectedStudent}
           />
         )}
         {view === "students" && <StudentManagement />}
       </main>
+
+      <MobileBottomNav currentView={view} onNavigate={setView} />
+      {/* Spacer for mobile bottom nav */}
+      <div className="h-14 lg:hidden" />
     </div>
   );
 }

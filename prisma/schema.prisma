@@ -7,16 +7,59 @@ datasource db {
   provider = "sqlite"
 }
 
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("TRAINER")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  student      Student? @relation("UserStudent")
+}
+
 model Student {
-  id            String    @id @default(cuid())
-  name          String
-  email         String?
-  phone         String?
-  qualification String
-  totalOwing    Float     @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  payments      Payment[]
+  id                String             @id @default(cuid())
+  name              String
+  email             String?
+  phone             String?
+  qualification     String
+  totalOwing        Float              @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  payments          Payment[]
+  evidenceRecords   EvidenceRecord[]
+  competencyRecords CompetencyRecord[]
+  userId            String?            @unique
+  user              User?              @relation("UserStudent", fields: [userId], references: [id])
+}
+
+model EvidenceRecord {
+  id              String   @id @default(cuid())
+  evidenceItemId  String
+  status          String   @default("uploaded")
+  assessorVerdict String?
+  filePath        String?
+  fileName        String?
+  uploadedAt      DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId       String
+
+  @@unique([studentId, evidenceItemId])
+}
+
+model CompetencyRecord {
+  id         String   @id @default(cuid())
+  unitCode   String
+  status     String
+  assessorId String?
+  decidedAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId  String
+
+  @@unique([studentId, unitCode])
 }
 
 model Payment {
@@ -28,4 +71,14 @@ model Payment {
   createdAt       DateTime @default(now())
   student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId       String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String?
+  userName  String?
+  targetId  String?
+  details   String?
+  createdAt DateTime @default(now())
 }

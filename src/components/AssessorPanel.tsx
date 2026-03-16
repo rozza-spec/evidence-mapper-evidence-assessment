@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { ExportCompetencyRecord } from "@/components/ExportButtons";
 
 interface Props {
   evidenceState: EvidenceState;
@@ -27,6 +28,7 @@ interface Props {
   onQualFilter: (q: QualificationId | null) => void;
   onVerdict: (id: string, verdict: AssessorVerdict) => void;
   onSetCompetency: (unitCode: string, status: UnitCompetency) => void;
+  selectedStudent?: { id: string; name: string; qualification: string } | null;
 }
 
 const QUAL_LABELS: Record<QualificationId, string> = {
@@ -54,22 +56,33 @@ export default function AssessorPanel({
   onQualFilter,
   onVerdict,
   onSetCompetency,
+  selectedStudent,
 }: Props) {
   const [expandedUnit, setExpandedUnit] = useState<string | null>(null);
   const coverage = computeUnitCoverage(evidenceState, qualFilter ?? undefined);
 
   return (
     <div className="py-8 space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <Shield size={24} className="text-accent" />
-        <div>
-          <h2 className="font-display text-4xl font-bold tracking-wide text-white">
-            ASSESSOR PANEL
-          </h2>
-          <p className="text-muted text-base mt-1">
-            Review evidence per unit — verify, query or reject items. Mark competency decisions.
-          </p>
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <Shield size={24} className="text-accent" />
+          <div>
+            <h2 className="font-display text-4xl font-bold tracking-wide text-white">
+              ASSESSOR PANEL
+            </h2>
+            <p className="text-muted text-base mt-1">
+              Review evidence per unit — verify, query or reject items. Mark competency decisions.
+            </p>
+          </div>
         </div>
+        {selectedStudent && (
+          <ExportCompetencyRecord
+            studentName={selectedStudent.name}
+            qualification={selectedStudent.qualification}
+            unitCompetency={unitCompetency}
+            qualFilter={qualFilter ?? undefined}
+          />
+        )}
       </div>
 
       {/* Qual filter */}

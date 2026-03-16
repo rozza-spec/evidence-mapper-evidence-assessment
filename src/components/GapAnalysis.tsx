@@ -11,12 +11,14 @@ import {
   Upload,
   Lightbulb,
 } from "lucide-react";
+import { ExportGapAnalysis } from "@/components/ExportButtons";
 
 interface Props {
   evidenceState: EvidenceState;
   qualFilter: QualificationId | null;
   onQualFilter: (q: QualificationId | null) => void;
-  onUpload: (id: string) => void;
+  onUpload: (id: string, file?: File) => void;
+  selectedStudent?: { id: string; name: string; qualification: string } | null;
 }
 
 const QUAL_LABELS: Record<QualificationId, string> = {
@@ -35,7 +37,7 @@ function getColourClasses(colour: string) {
   }
 }
 
-export default function GapAnalysis({ evidenceState, qualFilter, onQualFilter, onUpload }: Props) {
+export default function GapAnalysis({ evidenceState, qualFilter, onQualFilter, onUpload, selectedStudent }: Props) {
   const analysis = getGapAnalysis(evidenceState);
   const stats = computeStats(evidenceState);
 
@@ -48,16 +50,25 @@ export default function GapAnalysis({ evidenceState, qualFilter, onQualFilter, o
 
   return (
     <div className="py-8 space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <AlertTriangle size={24} className="text-accent" />
-        <div>
-          <h2 className="font-display text-4xl font-bold tracking-wide text-white">
-            GAP ANALYSIS & ALTERNATIVES
-          </h2>
-          <p className="text-muted text-base mt-1">
-            Units with fewer than 3 evidence items — with suggested alternatives to fill gaps
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <AlertTriangle size={24} className="text-accent" />
+          <div>
+            <h2 className="font-display text-4xl font-bold tracking-wide text-white">
+              GAP ANALYSIS & ALTERNATIVES
+            </h2>
+            <p className="text-muted text-base mt-1">
+              Units with fewer than 3 evidence items — with suggested alternatives to fill gaps
           </p>
         </div>
+        </div>
+        {selectedStudent && (
+          <ExportGapAnalysis
+            studentName={selectedStudent.name}
+            qualification={selectedStudent.qualification}
+            evidenceState={evidenceState}
+          />
+        )}
       </div>
 
       {/* Qual filter */}

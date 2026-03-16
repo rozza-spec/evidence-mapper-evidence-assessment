@@ -18,13 +18,16 @@ import {
   CheckCircle2,
   Circle,
   Filter,
+  FileText,
+  Download,
+  Paperclip,
 } from "lucide-react";
 
 interface Props {
   evidenceState: EvidenceState;
   qualFilter: QualificationId | null;
   onQualFilter: (q: QualificationId | null) => void;
-  onUpload: (id: string) => void;
+  onUpload: (id: string, file?: File) => void;
   onRemove: (id: string) => void;
 }
 
@@ -219,19 +222,34 @@ export default function MasterEvidenceList({
                 <div className={`w-1 self-stretch ${cls.dot} shrink-0`} />
 
                 {/* Upload toggle */}
-                <button
-                  onClick={() => isUploaded ? onRemove(ev.id) : onUpload(ev.id)}
-                  className="mt-0.5 shrink-0"
-                  aria-label={isUploaded ? "Remove evidence" : "Upload evidence"}
-                >
-                  {isUploaded && !isRejected ? (
-                    <CheckCircle2 size={20} className="text-accent" />
-                  ) : isRejected ? (
-                    <X size={20} className="text-red-400" />
-                  ) : (
-                    <Circle size={20} className="text-muted hover:text-accent transition-colors" />
-                  )}
-                </button>
+                <div className="mt-0.5 shrink-0 flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => {
+                      if (isUploaded) {
+                        onRemove(ev.id);
+                      } else {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = ".pdf";
+                        input.onchange = (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          onUpload(ev.id, file ?? undefined);
+                        };
+                        input.click();
+                      }
+                    }}
+                    className="shrink-0"
+                    aria-label={isUploaded ? "Remove evidence" : "Upload evidence"}
+                  >
+                    {isUploaded && !isRejected ? (
+                      <CheckCircle2 size={20} className="text-accent" />
+                    ) : isRejected ? (
+                      <X size={20} className="text-red-400" />
+                    ) : (
+                      <Upload size={20} className="text-muted hover:text-accent transition-colors" />
+                    )}
+                  </button>
+                </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
@@ -278,6 +296,23 @@ export default function MasterEvidenceList({
                       </span>
                     )}
                   </div>
+
+                  {/* File attachment info */}
+                  {isUploaded && !isRejected && state?.filePath && (
+                    <div className="flex items-center gap-2 mt-2 text-xs">
+                      <Paperclip size={12} className="text-accent" />
+                      <span className="text-muted">{state.fileName || "Attached file"}</span>
+                      <a
+                        href={state.filePath}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-accent hover:underline"
+                      >
+                        <Download size={10} />
+                        View
+                      </a>
+                    </div>
+                  )}
 
                   {/* Expanded: show unit mappings */}
                   {isExpanded && (
